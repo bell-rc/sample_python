@@ -4,11 +4,16 @@ build:
   pre_ci:
     - echo "hello world pre_ci"
     - *scripts
+    - *script-multiline|
     
   ci:
     - echo "hello world"
     - *template_1
+    - *script-multiline\
+    - *template-multiline>
+    - *script-multiline|
     
   post_ci:
     - echo "hello world post_ci"
-    - *script1-multiline/
+    - *template_1
+    - *template-multiline>
