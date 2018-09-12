@@ -3,7 +3,7 @@ language: node_js
 build:
   pre_ci:
     - echo "hello world pre_ci"
-    - *template_1
+    - *scripts
     
   ci:
     - echo "hello world"
@@ -11,4 +11,4 @@ build:
     
   post_ci:
     - echo "hello world post_ci"
-    - *template_1
+    - *scripts
