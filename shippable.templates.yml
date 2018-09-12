@@ -8,8 +8,16 @@ templates-1: &template_1
   - ls
 
 templates-2: &scripts
-  - echo "script line 1"
-  - echo "script line 1"
+  - echo "script line 2"
+  - echo "script line 2"
   - foo1=boo1
   - echo "foo1=$foo1"
   - ls
+  
+templates-3: &script1-multiline/
+  - echo "line 1"
+  - echo "line 2"
+  - echo "line 3"
+  - echo "hello" \
+    "world"
+    
