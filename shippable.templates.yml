@@ -1,4 +1,4 @@
-templates: &template_1
+templates-1: &template_1
   - echo "common-script line 1"
   - echo "common-script line 1"
   - foo=boo
@@ -7,7 +7,7 @@ templates: &template_1
   #- echo "key=$key" #encrypted key n values are "key=value"
   - ls
 
-templates: &scripts
+templates-2: &scripts
   - echo "script line 1"
   - echo "script line 1"
   - foo1=boo1
