@@ -2,8 +2,8 @@
 templates-6: &template_6
   - echo "common-script_template_1 line 1"
   - echo "common-script_template_1 line 1"
-  - foo=bootemplate_1
-  - echo "foo=$foo"
+  - foo6=bootemplate_6
+  - echo "foo6=$foo6"
   - ls
 
 templates-7: &scripts_7
