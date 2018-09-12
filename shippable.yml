@@ -1,4 +1,4 @@
-templates: &template-script 
+templates: &template_1
   - echo "common-script line 1"
   - echo "common-script line 1"
   - foo=boo
@@ -12,12 +12,12 @@ language: node_js
 build:
   pre_ci:
     - echo "hello world pre_ci"
-    - *template-script
+    - *template_1
     
   ci:
     - echo "hello world"
-    - *template-script
+    - *template_1
     
   post_ci:
     - echo "hello world post_ci"
-    - *template-script
+    - *template_1
