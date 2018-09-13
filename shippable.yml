@@ -1,0 +1,41 @@
+language: python
+
+#runtime:
+#  nodePool: custom__x86_64__Ubuntu_16_04
+  
+python:
+ # - 2.6 
+ # - 2.7
+ # - 3.2
+ # - 3.3
+ # - 3.4
+  - pypy
+  - pypy3
+
+build:
+    
+  ci:
+    - pip install -r requirements.txt
+    - mkdir -p shippable/testresults
+    - mkdir -p shippable/codecoverage
+    - which python
+    - coverage run `which nosetests` test.py --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+    - coverage xml -o shippable/codecoverage/coverage.xml
+    - lsb_release -a
+    - docker --version
+    - docker info
+    - docker ps 
+    
+integrations:    
+  notifications:
+
+    - integrationName: email         
+      type: email        
+      recipients:
+        - varsha@shippable.com
+      sendConsoleLogs: true
+      sendCoverageReports: true
+      on_start: always
+      on_success: always 
+      on_failure: always 
+      on_cancel: always 
