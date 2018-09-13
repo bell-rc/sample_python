@@ -3,23 +3,56 @@ templates-1: &template_1
   - echo "common-script_template_1 line 1"
   - foo=bootemplate_1
   - echo "foo=$foo"
-  #- secure: jiIsOHNYf13w5x761Q94QjNIBUHGC6sV9iKcudohJT44t3mGFX302Bp78CIaOIcNRLEY5eoOAusclFZJHoxqpfVsO0rtBZ6XgFA8mIu3p3ty8MgqWrKt+gM7wsHg49+G7WH//FaZka1G50X+gJuPLXC4K/MaFhN7/rZi3vlPP7wFpjvN6B80oHY3V1WRTQ8pr4QAmZ41l+kwLeY+2BrYp45djTLN1g1jOiZpnYbIMkLKxARDydOhoVHCfP5K+3N3xjJ+PXD6ytyYKiiijZGDrgZVeU37U91sputNhRUrBmLgg4tqWaX4LaqzG6EfAmRcVDupoGYSC9Y9fdglge6N0g==
-  #- echo "key=$key" #encrypted key n values are "key=value"
   - ls
 
 language: python
 
-python:
-
-  - 3.7
+#runtime:
+#  nodePool: custom__x86_64__Ubuntu_16_04
   
+python:
+ # - 2.6 
+ # - 2.7
+ # - 3.2
+ # - 3.3
+ # - 3.4
+  - pypy
+  - pypy3
+
 build:
   pre_ci:
-    - *scripts
-    
-  ci:
-    - python --version
+    - echo "hello"
     - *template_1
     
+  ci:
+    - pip install -r requirements.txt
+    - mkdir -p shippable/testresults
+    - mkdir -p shippable/codecoverage
+    - which python
+    - coverage run `which nosetests` test.py --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+    - coverage xml -o shippable/codecoverage/coverage.xml
+    - lsb_release -a
+    - docker --version
+    - docker info
+    - docker ps 
+    - *scripts
+
   post_ci:
+    - echo "EOD"
     - *script-multiline|
+    
+integrations:    
+  notifications:
+
+    - integrationName: email         
+      type: email        
+      recipients:
+        - shiptest.rc.ow@gmail.com
+        - shiptest.rc.me@gmail.com
+        - varsha@shippable.com
+      sendConsoleLogs: true
+      sendCoverageReports: true
+      on_start: always
+      on_success: always 
+      on_failure: always 
+on_cancel: always 
