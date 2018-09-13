@@ -35,11 +35,9 @@ build:
     - docker --version
     - docker info
     - docker ps 
-    - *scripts
 
   post_ci:
     - echo "EOD"
-    - *script-multiline|
     
 integrations:    
   notifications:
