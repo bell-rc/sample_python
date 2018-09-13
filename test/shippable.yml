@@ -37,8 +37,6 @@ integrations:
     - integrationName: email         
       type: email        
       recipients:
-        - shiptest.rc.ow@gmail.com
-        - shiptest.rc.me@gmail.com
         - varsha@shippable.com
       sendConsoleLogs: true
       sendCoverageReports: true
