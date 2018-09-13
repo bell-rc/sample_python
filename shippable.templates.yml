@@ -1,0 +1,49 @@
+
+templates-1: &template_1
+  - echo "common-script_template_1 line 1"
+  - echo "common-script_template_1 line 1"
+  - foo=bootemplate_1
+  - echo "foo=$foo"
+  #- secure: jiIsOHNYf13w5x761Q94QjNIBUHGC6sV9iKcudohJT44t3mGFX302Bp78CIaOIcNRLEY5eoOAusclFZJHoxqpfVsO0rtBZ6XgFA8mIu3p3ty8MgqWrKt+gM7wsHg49+G7WH//FaZka1G50X+gJuPLXC4K/MaFhN7/rZi3vlPP7wFpjvN6B80oHY3V1WRTQ8pr4QAmZ41l+kwLeY+2BrYp45djTLN1g1jOiZpnYbIMkLKxARDydOhoVHCfP5K+3N3xjJ+PXD6ytyYKiiijZGDrgZVeU37U91sputNhRUrBmLgg4tqWaX4LaqzG6EfAmRcVDupoGYSC9Y9fdglge6N0g==
+  #- echo "key=$key" #encrypted key n values are "key=value"
+  - ls
+
+templates-2: &scripts
+  - echo "script_scripts line 1"
+  - echo "script_scripts line 1"
+  - foo1=boo1scripts
+  - echo "foo1=$foo1"
+  - ls
+
+# multi-line \
+templates-3: &script-multiline\
+  - echo "script-multiline\ line 1"
+  - echo "script-multiline\ line 2"
+  - echo "hello" \
+    "world" \
+    "How you doing"
+  - foo3="boo3script1-multilineSlash"
+  - echo "foo3=$foo3"
+
+# multi-line >
+templates-4: &template-multiline>
+  - echo "common-script_template-multiline> line 1"
+  - echo "common-script_template-multiline> line 2"
+  - echo "common-script_template-multiline> line 3"
+  - >
+    echo "multiline common-script_template-multiline> line 1";
+    echo "multiline common-script_template-multiline> line 2";
+    echo "multiline common-script_template-multiline> line 3"
+  - foo4="boo4template-multilineLessthanSign"
+  - echo "foo4=$foo4"
+  
+templates-5: &script-multiline|
+  - echo "common-script_script-multiline| line 1"
+  - echo "common-script_script-multiline| line 2"
+  - echo "common-script_script-multiline| line 3"
+  - |
+    echo "script-multiline| common-script line 1"
+    echo "script-multiline| common-script line 2"
+    echo "script-multiline| common-script line 3"
+  - foo5="boo5script-multilinePipeSymbol"
+  - echo "foo5=$foo5"
