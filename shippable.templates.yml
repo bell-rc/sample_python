@@ -6,6 +6,7 @@ templates-1: &template_1
   #- secure: jiIsOHNYf13w5x761Q94QjNIBUHGC6sV9iKcudohJT44t3mGFX302Bp78CIaOIcNRLEY5eoOAusclFZJHoxqpfVsO0rtBZ6XgFA8mIu3p3ty8MgqWrKt+gM7wsHg49+G7WH//FaZka1G50X+gJuPLXC4K/MaFhN7/rZi3vlPP7wFpjvN6B80oHY3V1WRTQ8pr4QAmZ41l+kwLeY+2BrYp45djTLN1g1jOiZpnYbIMkLKxARDydOhoVHCfP5K+3N3xjJ+PXD6ytyYKiiijZGDrgZVeU37U91sputNhRUrBmLgg4tqWaX4LaqzG6EfAmRcVDupoGYSC9Y9fdglge6N0g==
   #- echo "key=$key" #encrypted key n values are "key=value"
   - ls
+  - echo "extra
 
 templates-2: &scripts
   - echo "script_scripts line 1"
@@ -44,5 +45,5 @@ templates-5: &script-multiline|
     echo "script-multiline| common-script line 1"
     echo "script-multiline| common-script line 2"
     echo "script-multiline| common-script line 3"
-  - foo5="boo5script-multilinePipeSymbol"
+  - foo5="boo5script-multilinePipeSymboltestagain"
   - echo "foo5=$foo5"
