@@ -9,7 +9,7 @@ templates-6: &template_6
 templates-7: &scripts_7
   - echo "script_scripts line 1"
   - echo "script_scripts line 1"
-  - foo7=boo7scripts
+  - foo7=boo7scriptstestingagain
   - echo "foo7=$foo7"
   - ls
 
