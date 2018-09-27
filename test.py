@@ -13,6 +13,11 @@ class TestSuite(unittest.TestCase):
         app.calculate2()
         self.failIf(app.retrieve2() != 58)
 
+    def test3(self):
+        app = App()
+        app.calculate3()
+        self.failIf(app.retrieve3() != 64)
+        
 def main():
     unittest.main()
 
