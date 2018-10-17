@@ -24,7 +24,6 @@ build:
     - docker --version
     - docker info
     - docker ps 
-    #- sleep 3m
 
 integrations:    
   notifications:
