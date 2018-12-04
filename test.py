@@ -11,22 +11,22 @@ class TestSuite(unittest.TestCase):
     def test2(self):
         app = App()
         app.calculate2()
-        self.failIf(app.retrieve2() != 58)
+        self.failIf(app.retrieve2() != 62)
 
     def test3(self):
         app = App()
         app.calculate3()
-        self.failIf(app.retrieve3() != 64)
+        self.failIf(app.retrieve3() != 72)
     
     def test4(self):
         app = App()
         app.calculate4()
-        self.failIf(app.retrieve4() != 56)
+        self.failIf(app.retrieve4() != 68)
     
     def test5(self):
         app = App()
         app.calculate5()
-        self.failIf(app.retrieve4() != 50)
+        self.failIf(app.retrieve4() != 73)
         
 def main():
     unittest.main()
