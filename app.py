@@ -1,9 +1,10 @@
 class App():
     def __init__(self):
         self.var1 = 15
-        self.var2 = 15
-        self.var3 = 15
-        self.var4 = 15
+        self.var2 = 16
+        self.var3 = 17
+        self.var4 = 18
+        self.var5 = 19
 
     def calculate(self):
         self.result = self.var1 * 4 + 2
@@ -29,6 +30,12 @@ class App():
     def retrieve4(self):
         return self.result4
     
+    def calculate5(self):
+        self.result5 = self.var5 * 4 - 3
+        
+    def retrieve5(self):
+        return self.result5
+    
 if __name__ == "__main__":
     app = App()
     app.calculate()
@@ -42,3 +49,6 @@ if __name__ == "__main__":
 
     app.calculate4()
     print(app.retrieve4)
+
+    app.calculate5()
+    print(app.retrieve5)
