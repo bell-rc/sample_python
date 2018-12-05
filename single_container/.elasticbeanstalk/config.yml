@@ -1,0 +1,18 @@
+branch-defaults:
+  default:
+    environment: ${AWS_EB_ENVIRONMENT_SINGLE}
+environment-defaults:
+  ${AWS_EB_ENVIRONMENT_SINGLE}:
+    branch: null
+    repository: null
+global:
+  application_name: ${AWS_EB_APPLICATION}
+  default_ec2_keyname: null
+  default_platform: null
+  default_region: ${DEPLOYEBBASICCONFIG_POINTER_REGION}
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: null
+  sc: null
+  workspace_type: Application
