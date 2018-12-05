@@ -10,10 +10,42 @@ python:
  # - 3.3
  # - 3.4
   - pypy
-  - pypy3
+ # - pypy3
+  
+env:
+  global:
+    - TEST_RESULTS_DIR=$SHIPPABLE_REPO_DIR/shippable/testresults
+    - CODE_COVERAGE_DIR=$SHIPPABLE_REPO_DIR/shippable/codecoverage
+    - TESTS_LOC_DIR=$SHIPPABLE_REPO_DIR/tests
+    - MOD_LOC=$SHIPPABLE_REPO_DIR/node_modules/.bin/
+   # - ECR_REPO=679404489841.dkr.ecr.us-east-1.amazonaws.com/nodeapp
+    - AWS_S3_BUCKET='s3://push-to-s3'
+    - AWS_S3_REGION='us-east-1'
+    #- secure: 7PMKeEjdH/5Wb+uGyL5jjiFZGrZdegNICH5AqpGMBAijZQAQnFMrWgQzZFP9aUc7GxxOK05Gmfoi2/IiL9+VTwckyAKN4KnpHVoAnz8VfEleXD4spv2Znb4/BaMxlPs4P+lhJ1BSZfyq0tEw0J1+pqzCR9tg3muUHa0SF0i13TzhsHrmTmQcYIvE0B96rYh0pmrfablLbcKvnQC2jg37crNBZVZ5BygQo7I4qzmnvfX39nK/4DaTpa04cmPPyFyPIajy9QXwLmQGPlGeCIk2RPaNJRzL2GweYReXYUE+tIOT6Uhqga2svbSnMjX4CeR8unrh+JfTa+J6D/MMzsG16w==
 
 build:
+#  pre_ci:
+  #Testing for pre_ci carrying over to pre_ci_boot
+   # - docker build -t=742038439709.dkr.ecr.us-west-2.amazonaws.com/sample_node .
+
+  # http://docs.shippable.com/ci/shippableyml/#ci
   ci:
+    # npm mirrors can sometimes be flacky, better to use shippable_retry
+    # http://docs.shippable.com/ci/advancedOptions/retry/
+    - python --version
+    - echo "Below are the 2 env from key value pair integration"
+    - echo $key1
+    - echo $key2
+    - if [ $key1 == "value1" ]; then echo 'success'; else testfail; fi
+    - if [ $key2 == "value2" ]; then echo 'success'; else testfail; fi
+   # - docker pull 742038439709.dkr.ecr.us-east-1.amazonaws.com/sample_php
+    - shippable_retry npm install
+    - mkdir -p $TEST_RESULTS_DIR && mkdir -p $CODE_COVERAGE_DIR
+  #  - pushd $TESTS_LOC_DIR
+  #  - $MOD_LOC/mocha --recursive "$TESTS_LOC_DIR/**/*.spec.js" -R mocha-junit-reporter --reporter-options mochaFile=$TEST_RESULTS_DIR/testresults.xml
+  #  - $MOD_LOC/istanbul --include-all-sources cover -root "$SHIPPABLE_REPO_DIR/routes" $SHIPPABLE_REPO_DIR/node_modules/mocha/bin/_mocha -- -R spec-xunit-file --recursive "$TESTS_LOC_DIR/**/*.spec.js"
+  #  - $MOD_LOC/istanbul report cobertura --dir $CODE_COVERAGE_DIR
+  #  - popd
     - pip install -r requirements.txt
     - mkdir -p shippable/testresults
     - mkdir -p shippable/codecoverage
@@ -24,16 +56,35 @@ build:
     - docker --version
     - docker info
     - docker ps 
-    #- sleep 3m
+    
+  # http://docs.shippable.com/ci/shippableyml/#post_ci
+  post_ci:
+   # - docker push 523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr:latest
+  #  - aws s3 sync $SHIPPABLE_BUILD_DIR "$AWS_S3_BUCKET" --region "$AWS_S3_REGION"
+  # Testing docker build and push
+    - docker build -t=shippabledocker/sample_node_pvt:latest.40 .
+    - docker push shippabledocker/sample_node_pvt:latest.40
+  # Testing gcr build and push
+    #- docker build -t=gcr.io/endless-ripple-224509/nodeimg:latest . 
+    #- docker push gcr.io/endless-ripple-224509/nodeimg:latest
+    - docker build -t=gcr.io/nodeprojectname/nodeimg:latest .
+    - docker push gcr.io/nodeprojectname/nodeimg:latest
+  # Testing quay build and push
+    - docker build -t=quay.io/revathird/samplenode_test .
+    - docker push quay.io/revathird/samplenode_test
+   # Testing ecr build and push
+    - docker build -t=523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr:latest .
+    - docker push 523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr:latest
+  #  - 'if [ $IS_PULL_REQUEST == "false" ] ; then docker build -t $ECR_REPO:$BRANCH.$BUILD_NUMBER .; fi'
+  #  - 'if [ $IS_PULL_REQUEST == "false" ] ; then docker push $ECR_REPO:$BRANCH.$BUILD_NUMBER ; fi'
+  #  - 'if [ $IS_PULL_REQUEST == "false" ] ; then echo "versionName=$BRANCH.$BUILD_NUMBER" > $JOB_STATE/deploy-eb-basic-image.env ; fi'
 
-integrations:    
+integrations:
   notifications:
 
     - integrationName: email         
       type: email        
       recipients:
-        - shiptest.rc.ow@gmail.com
-        - shiptest.rc.me@gmail.com
         - varsha@shippable.com
       sendConsoleLogs: true
       sendCoverageReports: true
@@ -41,3 +92,657 @@ integrations:
       on_success: always 
       on_failure: always 
       on_cancel: always 
+      
+  generic:     
+    - integrationName: keyvaluepairaccint 
+    
+  hub:
+ #Docker integration
+    - integrationName: dockerregistryaccint
+      type: dockerRegistryLogin
+  #GCR integration
+    #- integrationName: ship-gcr
+    #  type: gcr
+    - integrationName: googlecloudaccint
+      type: gcloudKey
+ # #ECR integration
+   # - integrationName: ship-ecr
+    #  type: ecr
+    #  region: us-east-1
+    #  branches: #Testing the wildcards for branches exclude
+      #  except:
+       ##   - n*
+   # - integrationName: ship-ecreast1
+   #   type: ecr
+   #   region: us-east-1
+  #Quay.io integration    
+    #- integrationName: ship-quay
+     # type: quay.io
+    - integrationName: quayioaccint
+      type: quayLogin
+
+  #ecr with new integration using "hub" tag in integrations
+    - integrationName: awskeysaccnew
+      type: amazonKeys
+      region: us-east-1 
+      
+ # deploy: 
+  #elastic beanstalk with new awskeys integrations using "deploy" tag in integrations
+ #   - integrationName: awskeys
+  #    type: amazonkeys
+  #    target: eb_paas
+  #    platform: Node.js
+  #    application_name: sample-app
+   #   env_name: SampleApp-env
+   #   region: us-east-1
+    
+    #- integrationName: awskeys
+    #  type: amazonkeys
+   #   target: eb_docker
+    #  application_name: "sample-docker"
+    #  env_name: DockerApp-env
+    #  bucket_name: "push-to-s3"
+    #  region: "us-east-1"
+    #  image_name: "shippabledocker/sample_node"
+    #  image_tag: "$BRANCH.$BUILD_NUMBER"
+
+resources:
+      
+  - name: cliecrcluster
+    type: cluster
+    integration: "awskeysaccnew"
+    pointer:
+      sourceName : "testrelease"
+      region: "us-east-1"
+  
+  - name: clikubecluster
+    type: cluster
+    integration: "kubernetesaccint"
+    
+  - name: cligkecluster
+    type: cluster
+    integration: googlecloudaccint
+    pointer:
+      sourceName: "cluster-1" #name of the cluster we are deploying.
+      region: "us-central1-a"
+
+  - name: cli-configaws
+    type: cliConfig
+    integration: "awskeysaccnew"
+    pointer:
+      sourceName : "testrc"
+      region: "us-east-1"
+  
+  - name: cli-configdocker
+    type: cliConfig
+    integration: "dockerregistryaccint"
+  
+  - name: cli-configdtr
+    type: cliConfig
+    integration: "quayioaccint"
+  
+  - name: cli-configpdr
+    type: cliConfig
+    integration: "quayioaccint"
+    
+  - name: cli-configgcl
+    type: cliConfig
+    integration: "googlecloudaccint"
+  
+  - name: cli-configjfrog
+    type: cliConfig
+    integration: "jfrogartifactoryaccint"
+  
+  - name: cli-configkube
+    type: cliConfig
+    integration: "kubernetesaccint"
+  
+  - name: cli-configquay
+    type: cliConfig
+    integration: "quayioaccint"
+  
+  - name: cliecr_img1
+    type: image
+    integration: awskeysaccnew
+    pointer:
+      # replace with your docker registry URI
+      sourceName: "523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr"
+    seed:
+      versionName: "latest"
+
+  - name: cli-image1
+    type: image
+    integration: dockerregistryaccint
+    pointer:
+      sourceName: "shippabledocker/pipelinev2"
+    seed:
+      versionName: "deploy.2"
+
+  - name: cli-image2
+    type: image
+    integration: dockerregistryaccint
+    pointer:
+      sourceName: "scriptnull/busybox"
+    seed:
+      versionName: "nodeenv"
+
+  - name: cli-dopts1
+    type: dockerOptions
+    version:
+      memory: 124
+      cpuShares: 1
+      publishAllPorts : true
+      portMappings:
+        - "80:80"
+
+        
+  - name: cli-params1
+    type: params
+    version:
+      params:
+        MONGO_API_URL: "localhost:28017"
+        DB_HOST: "ds015700.mlab.com"
+        DB_NAME: "ayeaye"
+        DB_PORT: "15700"
+        DB_USERNAME: "aye0aye"
+        DB_PASSWORD: "aye0aye"
+        ENVIRONMENT: "test-aws"
+  
+  - name: cli-params2
+    type: params
+    version:
+      params:
+        TEST: rc
+        secure: jSG65hVDJRaBuT/bRxTvpAC6rFcQswtSXpMYg46lnutNJ2sOsReYNTxXMvPoymro7MKlH9UiaKXndgMFrOkymzg9Tog3RqGXCKvaTLsa0gK7e/SFOs5TxeX27KcRut6e1TiL0Y3opTVJgWnTMkslWitFRcjXwGyrvzQrEQr78q+xhnLal72xvc4ojFaWUdTL72g3iNLklhoI4EsMoOj5KQnTZ2tgR+4/pYTKn6cCKzzK58T/rZXSqGb8QSSXTTGk3OH0rjKWd29Al082BRvPbcscPR2AfEdaAwtE7BJ06JPqBc+vDeFKD/bg00Euo02fed4uGh5T6W61FrdqZig/LA==
+  
+  - name: ebcli_params
+    type: params
+    version:
+      params:
+        AWS_EB_APPLICATION: "sample-app"
+        PORT: 8080
+  
+  - name: ecrebcli_params
+    type: params
+    version:
+      params:
+        ENVIRONMENT: "test"
+        AWS_EB_ENVIRONMENT: "SampleApp-env"
+
+  - name: cli-scale1
+    type: replicas
+    version:
+      count: 1
+  
+  - name: cli-version
+    type: version
+    seed:
+      versionName: "0.0.0"
+
+  - name: cli-repo
+    type: gitRepo
+    integration: github
+    pointer:
+      sourceName: Varsha-Arun/sample_pipelines
+      branch: integrationsCli
+      
+  - name: script3-repo
+    type: gitRepo
+    integration: github
+    pointer:
+      sourceName: Varsha-Arun/sample-script-3
+      branch: master
+      
+  - name: deploy-eb-basic-image
+    type: image
+    flags:
+      - deploy-eb-basic
+    pointer:
+      sourceName: "523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr" #"679404489841.dkr.ecr.us-east-1.amazonaws.com/nodeapp"
+    seed:
+      versionName: "latest"
+
+  - name: deploy-eb-nginx-image
+    type: image
+    pointer:
+      sourceName: "679404489841.dkr.ecr.us-east-1.amazonaws.com/nginx"
+    seed:
+      versionName: "1.12.0"
+
+  - name: deploy-eb-env-params
+    type: params
+    flags:
+      - deploy-eb-basic
+    version:
+      params:
+        ENVIRONMENT: "dev"
+        PORT: 80
+        AWS_EB_ENVIRONMENT_SINGLE: "SampleApp-env" #"Sample-env"
+        #AWS_EB_ENVIRONMENT_MULTI: "Sample-env-1"
+        AWS_EB_APPLICATION: "sample-app" #"deploy-eb-basic"
+
+  - name: deploy-eb-basic-config
+    type: cliConfig
+    flags:
+      - deploy-eb-basic
+    integration: awskeysaccnew
+    pointer:
+      region: us-east-1
+
+  - name: deploy-eb-basic-repo
+    type: gitRepo
+    flags:
+      - deploy-eb-basic
+    integration: github
+    pointer:
+      sourceName: Varsha-Arun/sample_pipelines
+      branch: integrationsCli
+  
+  - name: keyValueInt
+    type: integration
+    integration: keyvaluepairaccint
+    
+jobs:
+  - name: climanifest1
+    type: manifest
+    steps:
+      - IN: cli-image1
+        pull: true
+  
+  - name: cliawsdeploy
+    type: deploy
+    steps:
+      - IN: climanifest1
+      - IN: cliecrcluster
+      - TASK: managed
+  
+  - name: clikubedeploy
+    type: deploy
+    steps:
+      - IN: climanifest1
+      - IN: clikubecluster
+      - TASK: managed
+  
+  - name: cligkedeploy
+    type: deploy
+    steps:
+      - IN: climanifest1
+      - IN: cligkecluster
+      - TASK: managed
+  
+  - name: cli-sample1
+    type: runSh
+    allowPublicAccess: true
+    runtime:
+      nodePool: custom__x86_64__Ubuntu_14_04
+    steps:
+      - IN: script3-repo
+        showBuildStatus: true
+      - IN: cli-configaws
+      #- IN: sample_pipelines_ciRepo
+      - TASK:
+        - script: ls
+        - script: ./IN/script3-repo/gitRepo/echo.sh
+  
+  - name: cli-sample2
+    type: runSh
+    steps:
+      - IN: cli-sample1
+      - IN: keyValueInt
+      - TASK:
+        - script: ls
+        - script: echo $key1
+        - script: echo $key2
+  
+  - name: cli-sample3
+    type: runSh
+    allowPublicAccess: true
+    steps:
+      - IN: cli-configdocker
+      - TASK:
+        - script: ls
+        #- script: sleep 3m
+        #- script: ggdyttryyt
+  
+  - name: cli-sample4
+    type: runSh
+    steps:
+      - IN: cli-sample3
+      - IN: cli-sample2
+      - TASK:
+        - script: ls
+        - script: lsb_release -a
+        - script: docker --version
+        - script: docker info
+        - script: docker ps 
+        
+  - name: cli-runsheb1
+    type: runSh
+    steps:
+      - IN: cliecr_img1 #demo_java_ecr_img
+      - IN: cli-configaws #demo_java_ecr_awscli
+      - IN: cli-repo # demo_java_ecr_gitrepo
+        switch: off
+      - IN: ecrebcli_params #demo_java_ecr_params_test
+      - IN: ebcli_params #demo_java_ecr_params
+      - TASK:
+        # assign Shippable-injected variables to variables used in templates
+        - script: export ENVIRONMENT=$ECREBCLI_PARAMS_PARAMS_ENVIRONMENT PORT=EBCLI_PARAMS_PARAMS_PORT IMAGE_REPO=$CLIECR_IMG1_SOURCENAME IMAGE_TAG=$CLIECR_IMG1_VERSIONNAME
+        # update template files with values in env variables
+        - script: cd $CLIREPO_STATE/deploy
+        - script: pwd
+        - script: echo "updating templates with environment variables"
+        - script: shippable_replace Dockerrun.aws.json .ebextensions/environmentvariables.config
+        # initialize eb cli for app sample-app
+        - script: echo "initializing EB"
+        - script: eb init sample-app --platform docker-1.12.6 --region us-east-1 --keyname kp-us-west-2
+        # deploy latest image to elastic beanstalk
+        - script: echo "Deploying new version to Elastic Beanstalk"
+        - script: eb deploy $ECREBCLI_PARAMS_PARAMS_AWS_EB_ENVIRONMENT
+        # save latest deployment to state
+        - script: echo -e "IMAGE_REPO=$IMAGE_REPO\nIMAGE_TAG=$IMAGE_TAG" >> $CLIRUNSHEB1_STATE/latest_test_deploy.env
+
+  - name: cli-runshecr
+    type: runSh
+    steps:
+      #- IN: cli-repo
+      - IN: cli-configaws
+        scopes: 
+          - ecr
+      #- OUT: sample_php_ciRepo
+      - TASK:
+        #- script: ls
+        - script: echo CLICONFIGAWS_INTEGRATION_ACCESSKEY=$CLICONFIGAWS_INTEGRATION_ACCESSKEY
+        - script: echo AWSCLICONFIG_INTEGRATION_SECRETKEY=${#CLICONFIGAWS_INTEGRATION_SECRETKEY}
+        - script: echo AWSCLICONFIG_NAME=$CLICONFIGAWS_NAME
+        - script: echo AWSCLICONFIG_ID=$CLICONFIGAWS_ID
+        - script: echo AWSCLICONFIG_TYPE=$CLICONFIGAWS_TYPE
+        - script: echo AWSCLICONFIG_INTEGRATION_TYPE=$CLICONFIGAWS_INTEGRATION_TYPE
+        - script: echo AWSCLICONFIG_OPEARATION=$CLICONFIGAWS_OPERATION
+        - script: echo AWSCLICONFIG_PATH=$CLICONFIGAWS_PATH
+        - script: echo AWSCLICONFIG_POINTER_REGION=$CLICONFIGAWS_POINTER_REGION
+        - script: echo AWSCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGAWS_POINTER_CLUSTERNAME
+        - script: echo AWSCLICONFIG_VERSIONNUMBER=$CLICONFIGAWS_VERSIONNUMBER
+        - script: echo AWSCLICONFIG_VERSIONNAME=$CLICONFIGAWS_VERSIONNAME
+        - script: echo AWSCLICONFIG_VERSIONID=$CLICONFIGAWS_VERSIONID
+        - script: docker pull 523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr:latest
+        - script: echo "hello"
+        - script: echo "test all the images with GCE or AWS on-demand nodes"
+        - script: docker push 523491569906.dkr.ecr.us-east-1.amazonaws.com/sampleecr:latest
+        
+  - name: cli-runshaws
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configaws
+        scopes:
+          - aws
+      - TASK:
+        - script: eb --version
+        - script: echo CLICONFIGAWS_INTEGRATION_ACCESSKEY=$CLICONFIGAWS_INTEGRATION_ACCESSKEY
+        - script: echo AWSCLICONFIG_INTEGRATION_SECRETKEY=${#CLICONFIGAWS_INTEGRATION_SECRETKEY}
+        - script: echo AWSCLICONFIG_NAME=$CLICONFIGAWS_NAME
+        - script: echo AWSCLICONFIG_ID=$CLICONFIGAWS_ID
+        - script: echo AWSCLICONFIG_TYPE=$CLICONFIGAWS_TYPE
+        - script: echo AWSCLICONFIG_INTEGRATION_TYPE=$CLICONFIGAWS_INTEGRATION_TYPE
+        - script: echo AWSCLICONFIG_OPEARATION=$CLICONFIGAWS_OPERATION
+        - script: echo AWSCLICONFIG_PATH=$CLICONFIGAWS_PATH
+        - script: echo AWSCLICONFIG_POINTER_REGION=$CLICONFIGAWS_POINTER_REGION
+        - script: echo AWSCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGAWS_POINTER_CLUSTERNAME
+        - script: echo AWSCLICONFIG_VERSIONNUMBER=$CLICONFIGAWS_VERSIONNUMBER
+        - script: echo AWSCLICONFIG_VERSIONNAME=$CLICONFIGAWS_VERSIONNAME
+        - script: echo AWSCLICONFIG_VERSIONID=$CLICONFIGAWS_VERSIONID      
+        
+  - name: cli-runshdocker
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configdocker
+      - TASK:
+        - script: echo DOCKERCLICONFIG_NAME=$CLICONFIGDOCKER_NAME
+        - script: echo DOCKERCLICONFIG_ID=$CLICONFIGDOCKER_ID
+        - script: echo DOCKERCLICONFIG_TYPE=$CLICONFIGDOCKER_TYPE
+        - script: echo DOCKERCLICONFIG_INTEGRATION_TYPE=$CLICONFIGDOCKER_INTEGRATION_TYPE
+        - script: echo DOCKERCLICONFIG_OPEARATION=$CLICONFIGDOCKER_OPERATION
+        - script: echo DOCKERCLICONFIG_PATH=$CLICONFIGDOCKER_PATH
+        - script: echo DOCKERCLICONFIG_POINTER_REGION=$CLICONFIGDOCKER_POINTER_REGION
+        - script: echo DOCKERCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGDOCKER_POINTER_CLUSTERNAME
+        - script: echo DOCKERCLICONFIG_VERSIONNUMBER=$CLICONFIGDOCKER_VERSIONNUMBER
+        - script: echo DOCKERCLICONFIG_VERSIONNAME=$CLICONFIGDOCKER_VERSIONNAME
+        - script: echo DOCKERCLICONFIG_VERSIONID=$CLICONFIGDOCKER_VERSIONID
+        - script: echo CLICONFIGDOCKER_INTEGRATION_URL=$CLICONFIGDOCKER_INTEGRATION_URL
+        - script: echo CLICONFIGDOCKER_INTEGRATION_USERNAME=$CLICONFIGDOCKER_INTEGRATION_USERNAME
+        - script: echo CLICONFIGDOCKER_INTEGRATION_PASSWORD=${#CLICONFIGDOCKER_INTEGRATION_PASSWORD}
+        - script: echo CLICONFIGDOCKER_INTEGRATION_EMAIL=$CLICONFIGDOCKER_INTEGRATION_EMAIL
+        - script: docker pull shippabledocker/sample_node_pvt:latest.40
+ 
+  - name: cli-runshdtr
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configdtr
+      - TASK:
+        - script: echo DTRCLICONFIG_NAME=$CLICONFIGDTR_NAME
+        - script: echo DTRCLICONFIG_ID=$CLICONFIGDTR_ID
+        - script: echo DTRCLICONFIG_TYPE=$CLICONFIGDTR_TYPE
+        - script: echo DTRCLICONFIG_INTEGRATION_TYPE=$CLICONFIGDTR_INTEGRATION_TYPE
+        - script: echo DTRCLICONFIG_OPEARATION=$CLICONFIGDTR_OPERATION
+        - script: echo DTRCLICONFIG_PATH=$CLICONFIGDTR_PATH
+        - script: echo DTRCLICONFIG_POINTER_REGION=$CLICONFIGDTR_POINTER_REGION
+        - script: echo DTRCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGDTR_POINTER_CLUSTERNAME
+        - script: echo DTRCLICONFIG_VERSIONNUMBER=$CLICONFIGDTR_VERSIONNUMBER
+        - script: echo DTRCLICONFIG_VERSIONNAME=$CLICONFIGDTR_VERSIONNAME
+        - script: echo DTRCLICONFIG_VERSIONID=$CLICONFIGDTR_VERSIONID
+        - script: echo CLICONFIGDTR_INTEGRATION_URL=$CLICONFIGDTR_INTEGRATION_URL
+        - script: echo CLICONFIGDTR_INTEGRATION_USERNAME=$CLICONFIGDTR_INTEGRATION_USERNAME
+        - script: echo CLICONFIGDTR_INTEGRATION_PASSWORD=${#CLICONFIGDTR_INTEGRATION_PASSWORD}
+        - script: echo CLICONFIGDTR_INTEGRATION_EMAIL=$CLICONFIGDTR_INTEGRATION_EMAIL
+        - script: docker pull quay.io/revathird/samplenode_test
+  
+  - name: cli-runshpdr
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configpdr
+      - TASK:
+        - script: echo PDRCLICONFIG_NAME=$CLICONFIGPDR_NAME
+        - script: echo PDRCLICONFIG_ID=$CLICONFIGPDR_ID
+        - script: echo PDRCLICONFIG_TYPE=$CLICONFIGPDR_TYPE
+        - script: echo PDRCLICONFIG_INTEGRATION_TYPE=$CLICONFIGPDR_INTEGRATION_TYPE
+        - script: echo PDRCLICONFIG_OPEARATION=$CLICONFIGPDR_OPERATION
+        - script: echo PDRCLICONFIG_PATH=$CLICONFIGPDR_PATH
+        - script: echo PDRCLICONFIG_POINTER_REGION=$CLICONFIGPDR_POINTER_REGION
+        - script: echo PDRCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGPDR_POINTER_CLUSTERNAME
+        - script: echo PDRCLICONFIG_VERSIONNUMBER=$CLICONFIGPDR_VERSIONNUMBER
+        - script: echo PDRCLICONFIG_VERSIONNAME=$CLICONFIGPDR_VERSIONNAME
+        - script: echo PDRCLICONFIG_VERSIONID=$CLICONFIGPDR_VERSIONID
+        - script: echo CLICONFIGPDR_INTEGRATION_URL=$CLICONFIGPDR_INTEGRATION_URL
+        - script: echo CLICONFIGPDR_INTEGRATION_USERNAME=$CLICONFIGPDR_INTEGRATION_USERNAME
+        - script: echo CLICONFIGPDR_INTEGRATION_PASSWORD=${#CLICONFIGPDR_INTEGRATION_PASSWORD}
+        - script: echo CLICONFIGPDR_INTEGRATION_EMAIL=$CLICONFIGPDR_INTEGRATION_EMAIL
+        - script: docker pull quay.io/revathird/samplenode_test
+        
+  - name: cli-runshgcr
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configgcl
+        scopes:
+          - gcr
+      - TASK:
+        - script: echo GCLCLICONFIG_NAME=$CLICONFIGGCL_NAME
+        - script: echo GCLCLICONFIG_ID=$CLICONFIGGCL_ID
+        - script: echo GCLCLICONFIG_TYPE=$CLICONFIGGCL_TYPE
+        - script: echo GCLCLICONFIG_INTEGRATION_TYPE=$CLICONFIGGCL_INTEGRATION_TYPE
+        - script: echo GCLCLICONFIG_OPEARATION=$CLICONFIGGCL_OPERATION
+        - script: echo GCLCLICONFIG_PATH=$CLICONFIGGCL_PATH
+        - script: echo GCLCLICONFIG_POINTER_REGION=$CLICONFIGGCL_POINTER_REGION
+        - script: echo GCLCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGGCL_POINTER_CLUSTERNAME
+        - script: echo GCLCLICONFIG_VERSIONNUMBER=$CLICONFIGGCL_VERSIONNUMBER
+        - script: echo GCLCLICONFIG_VERSIONNAME=$CLICONFIGGCL_VERSIONNAME
+        - script: echo GCLCLICONFIG_VERSIONID=$CLICONFIGGCL_VERSIONID
+        - script: echo CLICONFIGGCL_INTEGRATION_JSON_KEY=${#CLICONFIGGCL_INTEGRATION_JSON_KEY}
+        - script: docker pull gcr.io/nodeprojectname/nodeimg:latest
+  
+  - name: cli-runshgcl
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configgcl
+      - TASK:
+        - script: echo GCLCLICONFIG_NAME=$CLICONFIGGCL_NAME
+        - script: echo GCLCLICONFIG_ID=$CLICONFIGGCL_ID
+        - script: echo GCLCLICONFIG_TYPE=$CLICONFIGGCL_TYPE
+        - script: echo GCLCLICONFIG_INTEGRATION_TYPE=$CLICONFIGGCL_INTEGRATION_TYPE
+        - script: echo GCLCLICONFIG_OPEARATION=$CLICONFIGGCL_OPERATION
+        - script: echo GCLCLICONFIG_PATH=$CLICONFIGGCL_PATH
+        - script: echo GCLCLICONFIG_POINTER_REGION=$CLICONFIGGCL_POINTER_REGION
+        - script: echo GCLCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGGCL_POINTER_CLUSTERNAME
+        - script: echo GCLCLICONFIG_VERSIONNUMBER=$CLICONFIGGCL_VERSIONNUMBER
+        - script: echo GCLCLICONFIG_VERSIONNAME=$CLICONFIGGCL_VERSIONNAME
+        - script: echo GCLCLICONFIG_VERSIONID=$CLICONFIGGCL_VERSIONID
+        - script: echo CLICONFIGGCL_INTEGRATION_JSON_KEY=${#CLICONFIGGCL_INTEGRATION_JSON_KEY}
+        - script: docker pull gcr.io/nodeprojectname/nodeimg:latest
+  
+  - name: cli-runshgke
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configgcl
+        scopes:
+          - gke
+      - TASK:
+        - script: echo GCLCLICONFIG_NAME=$CLICONFIGGCL_NAME
+        - script: echo GCLCLICONFIG_ID=$CLICONFIGGCL_ID
+        - script: echo GCLCLICONFIG_TYPE=$CLICONFIGGCL_TYPE
+        - script: echo GCLCLICONFIG_INTEGRATION_TYPE=$CLICONFIGGCL_INTEGRATION_TYPE
+        - script: echo GCLCLICONFIG_OPEARATION=$CLICONFIGGCL_OPERATION
+        - script: echo GCLCLICONFIG_PATH=$CLICONFIGGCL_PATH
+        - script: echo GCLCLICONFIG_POINTER_REGION=$CLICONFIGGCL_POINTER_REGION
+        - script: echo GCLCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGGCL_POINTER_CLUSTERNAME
+        - script: echo GCLCLICONFIG_VERSIONNUMBER=$CLICONFIGGCL_VERSIONNUMBER
+        - script: echo GCLCLICONFIG_VERSIONNAME=$CLICONFIGGCL_VERSIONNAME
+        - script: echo GCLCLICONFIG_VERSIONID=$CLICONFIGGCL_VERSIONID
+        - script: echo CLICONFIGGCL_INTEGRATION_JSON_KEY=${#CLICONFIGGCL_INTEGRATION_JSON_KEY}
+        - script: docker pull gcr.io/nodeprojectname/nodeimg:latest
+        
+  - name: cli-runshjfrog
+    type: runSh
+    allowPublicAccess: true
+    steps:
+      - IN: cli-repo
+      - IN: cli-configjfrog
+      - TASK:
+        - script: echo JFROGCLICONFIG_NAME=$CLICONFIGJFROG_NAME
+        - script: echo JFROGCLICONFIG_ID=$CLICONFIGJFROG_ID
+        - script: echo JFROGCLICONFIG_TYPE=$CLICONFIGJFROG_TYPE
+        - script: echo JFROGCLICONFIG_INTEGRATION_TYPE=$CLICONFIGJFROG_INTEGRATION_TYPE
+        - script: echo JFROGCLICONFIG_OPEARATION=$CLICONFIGJFROG_OPERATION
+        - script: echo JFROGCLICONFIG_PATH=$CLICONFIGJFROG_PATH
+        - script: echo JFROGCLICONFIG_POINTER_REGION=$CLICONFIGJFROG_POINTER_REGION
+        - script: echo JFROGCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGJFROG_POINTER_CLUSTERNAME
+        - script: echo JFROGCLICONFIG_VERSIONNUMBER=$CLICONFIGJFROG_VERSIONNUMBER
+        - script: echo JFROGCLICONFIG_VERSIONNAME=$CLICONFIGJFROG_VERSIONNAME
+        - script: echo JFROGCLICONFIG_VERSIONID=$CLICONFIGJFROG_VERSIONID
+        - script: echo CLICONFIGJFROG_INTEGRATION_URL=$CLICONFIGJFROG_INTEGRATION_URL
+        - script: echo CLICONFIGJFROG_INTEGRATION_USERNAME=$CLICONFIGJFROG_INTEGRATION_USERNAME
+        - script: echo CLICONFIGJFROG_INTEGRATION_PASSWORD=${#CLICONFIGJFROG_INTEGRATION_PASSWORD}
+        - script: jfrog rt dl test-jfrog-ship/testoct.sh
+        
+  - name: cli-runshkube
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configkube
+      - TASK:
+        - script: echo KUBECLICONFIG_NAME=$CLICONFIGKUBE_NAME
+        - script: echo KUBECLICONFIG_ID=$CLICONFIGKUBE_ID
+        - script: echo KUBECLICONFIG_TYPE=$CLICONFIGKUBE_TYPE
+        - script: echo KUBECLICONFIG_INTEGRATION_TYPE=$CLICONFIGKUBE_INTEGRATION_TYPE
+        - script: echo KUBECLICONFIG_OPEARATION=$CLICONFIGKUBE_OPERATION
+        - script: echo KUBECLICONFIG_PATH=$CLICONFIGKUBE_PATH
+        - script: echo KUBECLICONFIG_POINTER_REGION=$CLICONFIGKUBE_POINTER_REGION
+        - script: echo KUBECLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGKUBE_POINTER_CLUSTERNAME
+        - script: echo KUBECLICONFIG_VERSIONNUMBER=$CLICONFIGKUBE_VERSIONNUMBER
+        - script: echo KUBECLICONFIG_VERSIONNAME=$CLICONFIGKUBE_VERSIONNAME
+        - script: echo KUBECLICONFIG_VERSIONID=$CLICONFIGKUBE_VERSIONID
+        - script: echo CLICONFIGKUBE_INTEGRATION_KUBECONFIGCONTENT=${#CLICONFIGKUBE_INTEGRATION_KUBECONFIGCONTENT}
+        - script: kubectl version
+  
+  - name: cli-runshquay
+    type: runSh
+    steps:
+      - IN: cli-repo
+      - IN: cli-configquay
+      - TASK:
+        - script: echo QUAYCLICONFIG_NAME=$CLICONFIGQUAY_NAME
+        - script: echo QUAYCLICONFIG_ID=$CLICONFIGQUAY_ID
+        - script: echo QUAYCLICONFIG_TYPE=$CLICONFIGQUAY_TYPE
+        - script: echo QUAYCLICONFIG_INTEGRATION_TYPE=$CLICONFIGQUAY_INTEGRATION_TYPE
+        - script: echo QUAYCLICONFIG_OPEARATION=$CLICONFIGQUAY_OPERATION
+        - script: echo QUAYCLICONFIG_PATH=$CLICONFIGQUAY_PATH
+        - script: echo QUAYCLICONFIG_POINTER_REGION=$CLICONFIGQUAY_POINTER_REGION
+        - script: echo QUAYCLICONFIG_POINTER_CLUSTERNAME=$CLICONFIGQUAY_POINTER_CLUSTERNAME
+        - script: echo QUAYCLICONFIG_VERSIONNUMBER=$CLICONFIGQUAY_VERSIONNUMBER
+        - script: echo QUAYCLICONFIG_VERSIONNAME=$CLICONFIGQUAY_VERSIONNAME
+        - script: echo QUAYCLICONFIG_VERSIONID=$CLICONFIGQUAY_VERSIONID
+        - script: echo CLICONFIGQUAY_INTEGRATION_ACCESSTOKEN=${#CLICONFIGQUAY_INTEGRATION_ACCESSTOKEN}
+        - script: echo CLICONFIGQUAY_INTEGRATION_USERNAME=$CLICONFIGQUAY_INTEGRATION_USERNAME
+        - script: echo CLICONFIGQUAY_INTEGRATION_PASSWORD=${#CLICONFIGQUAY_INTEGRATION_PASSWORD}
+        - script: echo CLICONFIGQUAY_INTEGRATION_EMAIL=$CLICONFIGQUAY_INTEGRATION_EMAIL
+        - script: docker pull quay.io/revathird/samplenode_test
+  
+ # - name: sample_pipelines_runCI
+ #   type: runCI
+ #   flags:
+  #    - sample_pipelines_runCI
+  #  steps:
+  #    - OUT: deploy-eb-basic-image
+
+  - name: deploy-eb-basic-deploy
+    type: runSh
+    flags:
+      - deploy-eb-basic
+    steps:
+      - IN: deploy-eb-basic-image
+      - IN: deploy-eb-basic-config
+        switch: off
+      - IN: deploy-eb-env-params
+        switch: off
+      - IN: deploy-eb-basic-repo
+        switch: off
+      - TASK:
+        - script: eb --version
+        - script: pushd $DEPLOYEBBASICREPO_STATE/single_container && ls -al
+        - script: shippable_replace Dockerrun.aws.json .elasticbeanstalk/config.yml
+        - script: eb deploy -v
+
+  #- name: deploy-eb-multi-deploy
+   # type: runSh
+  #  flags:
+  #    - deploy-eb-basic
+  #  steps:
+  #    - IN: deploy-eb-basic-image
+  #    - IN: deploy-eb-nginx-image
+  #    - IN: deploy-eb-basic-config
+  #      switch: off
+   #   - IN: deploy-eb-env-params
+   #     switch: off
+  #    - IN: deploy-eb-basic-repo
+   #     switch: off
+  #    - TASK:
+  #      - script: eb --version
+  #      - script: pushd $DEPLOYEBBASICREPO_STATE/multi_container && ls -al
+  #      - script: shippable_replace Dockerrun.aws.json .elasticbeanstalk/config.yml
+   #     - script: eb deploy -v
+            
+triggers:
+   - name: cli-trigger1
+     type: trigger
+     version:
+       counter: 0
+   
+   - name: cli-trigger2
+     type: trigger
+     version:
+       counter: 0
