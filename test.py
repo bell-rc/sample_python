@@ -27,6 +27,11 @@ class TestSuite(unittest.TestCase):
         app = App()
         app.calculate5()
         self.failIf(app.retrieve5() != 73)
+    
+    def test6(self):
+        app = App()
+        app.calculate6()
+        self.failIf(app.retrieve6() != 77)
         
 def main():
     unittest.main()
