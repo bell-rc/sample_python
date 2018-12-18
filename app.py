@@ -5,6 +5,7 @@ class App():
         self.var3 = 17
         self.var4 = 18
         self.var5 = 19
+        self.var6 = 20
 
     def calculate(self):
         self.result = self.var1 * 4 + 2
@@ -36,6 +37,12 @@ class App():
     def retrieve5(self):
         return self.result5
     
+    def calculate6(self):
+        self.result6 = self.var6 * 4 - 3
+        
+    def retrieve6(self):
+        return self.result6
+    
 if __name__ == "__main__":
     app = App()
     app.calculate()
@@ -52,3 +59,6 @@ if __name__ == "__main__":
 
     app.calculate5()
     print(app.retrieve5)
+
+    app.calculate6()
+    print(app.retrieve6)
