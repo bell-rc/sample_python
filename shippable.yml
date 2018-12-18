@@ -27,7 +27,7 @@ build:
     - docker --version
     - docker info
     - docker ps 
-    - echo "from changeinshippableyml branch"
+    - echo "from changeinshippableyml branch bellrc"
 
 integrations:    
   notifications:
